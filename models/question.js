@@ -16,7 +16,8 @@ module.exports = (sequelize, DataTypes) => {
   question.init({
     queid: DataTypes.INTEGER,
     quedes: DataTypes.TEXT,
-    queName: DataTypes.STRING
+    queName: DataTypes.STRING,
+    electionid:DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'question',

@@ -23,6 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
+    static async deleteElection(id) {
+      return await this.destroy({
+        where: {
+          id,
+        },
+      });
+    }
+  
   }
   election.init({
     electionid: DataTypes.STRING,

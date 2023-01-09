@@ -171,4 +171,38 @@ app.get(
       }
     }
   );
+
+
+  app.get(
+    "/elections/:id",
+    async (request, response) => {
+      try {
+        const { electionname, electionstatus } = await election.findByPk(
+          request.params.id
+        );
+        const quesCount = await question.count({
+          where: {
+            electionid: request.params.id,
+          },
+        });
+        const voterCount = await voter.count({
+          where: {
+            electionid: request.params.id,
+          },
+        });
+  
+        response.render("manageElection", {
+          title: electionname,
+          quesCount,
+          voterCount,
+          electionName: electionname,
+          onGoingStatus:electionstatus,
+          id: request.params.id,
+          csrfToken: request.csrfToken(),
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    })
+  
 module.exports = app;
