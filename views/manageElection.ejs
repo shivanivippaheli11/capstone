@@ -68,14 +68,14 @@
     <a href="/signout"><button>SignOut</button></a>
 
     <h3><a href="/elections/<%=id%>"><%=electionName%></a></h3>
-    <h4>Number of Questions in Ballot:<span><%=quesCount%></span></h4>
+    <h3>Number of Questions in Ballot:<span><%=quesCount%></span></h3>
     <% if (! onGoingStatus){%>
         <a href="/elections/<%=id%>/questions">Manage your questions</a>
     <%}else{%>
-        <p>Election running at:</p>
+        <b>Election running at:</b>
         <a id="vote" href="/elections/<%=id%>/vote" >/elections/<%=id%>/vote</a>
         <%}%>
-    <h4>Number of registered Voters for this election:<span><%=voterCount%></span> </h4>
+    <h3>Number of registered Voters for this election:<span><%=voterCount%></span> </h3>
     <a href="/elections/<%=id%>/voters">Manage voters</a>
     <div>
         <%if(!onGoingStatus){%>

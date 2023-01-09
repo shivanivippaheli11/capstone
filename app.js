@@ -204,5 +204,68 @@ app.get(
         console.log(error);
       }
     })
+    app.get(
+      "/elections/:id/questions",
+            async (request, response) => {
+        const allQuestions = await question.getAllQuestions(request.params.id);
+        console.log(allQuestions);
+        const currentElection = await election.findByPk(request.params.id);
+        response.render("questions", {
+          title: "electionQuestions",
+          currentElection,
+          allQuestions,
+          id: request.params.id,
+          csrfToken: request.csrfToken(),
+        });
+      }
+    );
+  
+    app.post(
+      "/elections/:id/questions/new",
+      async (request, response) => {
+        try {
+          const questionn = await question.newQuestion({
+            name: request.body.name,
+            description: request.body.description,
+            electionid: request.params.id,
+          });
+          console.log(questionn);
+          if (request.accepts("html")) {
+            response.redirect(
+              `/elections/${request.params.id}/questions`
+            );
+          } else {
+            response.json(questionn);
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
+
+    app.get(
+      "/elections/:id/questions/:qid",
+      async (request, response) => {
+        try {
+          const currentQuestion = await question.findByPk(request.params.qid);
+          const currentElection = await currentQuestion.getelection();
+    
+          const options = await currentQuestion.getoptions();
+          const optionCount = await currentQuestion.countoptions();
+    
+          response.render("manageQuestion", {
+            title: "Manage your Question",
+            currentQuestion,
+            options: options,
+            optionCount,
+            currentElection,
+            csrfToken: request.csrfToken(),
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    );
+    
   
 module.exports = app;

@@ -12,6 +12,25 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
     }
+    static async getAllQuestions(id) {
+      return await question.findAll({
+        where: {
+          electionid: id,
+        },
+      });
+    }
+
+    static async newQuestion(data) {
+      try {
+        return await this.create({
+          queName: data.name,
+          quedes: data.description,
+          electionid: data.electionid,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }
   }
   question.init({
     queid: DataTypes.INTEGER,

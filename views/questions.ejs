@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%=title%></title>
+  </head>
+  <body>
+    <%- include('header.ejs') %>
+    <a href="/signout"><button>SignOut</button></a>
+    
+    <h4><%=currentElection.electionname%>- ballot</h4>
+    <div>
+
+        <table>
+            <%for (let i=0; i < allQuestions.length;i++){%>
+                <tr>
+                    <td>
+                        <%=i+1%> . <a href="/elections/<%=id%>/questions/<%=allQuestions[i].id%>">
+                            <%= allQuestions[i].queName %>
+                        </a>
+                        
+                    </td>
+                </tr>
+                <% } %>
+            </table>
+            
+    </div>
+    <br><hr>
+    <form action="/elections/<%=id%>/questions/new" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <table>
+        <tr>
+            <td>
+                <label for="questionName">Question Name:</label>
+            </td>
+            <td>
+                <input type="text" id="questionName" name="name">
+            </td>
+        </tr>
+        <tr>
+            <td>
+            <label for="description">Description:</label>
+            </td>
+            <td>
+                <textarea name="description" id="description" cols="20" rows="3"></textarea>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <button type="submit">
+                    Add Question
+                </button>
+            </td>
+        </tr>
+        </table>
+    </form>
+  </body>
+</html>
