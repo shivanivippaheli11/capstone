@@ -10,9 +10,12 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      election.hasMany(models.question, {
+        onDelete: "CASCADE",
+        foreignKey: "electionid",
+      });
     }
-    static getElections(){
+    static getElection(){
       return election.findAll()
     }
 
@@ -29,6 +32,17 @@ module.exports = (sequelize, DataTypes) => {
           id,
         },
       });
+    }
+    static async getAllOnGoingElections() {
+      return await election.findAll({
+        where: {
+          onGoingStatus: true,
+        },
+      });
+    }
+    static async checkStatus(id) {
+      const election = await election.findByPk(id);
+      return election.onGoingStatus;
     }
   
   }

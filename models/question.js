@@ -10,8 +10,12 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      question.belongsTo(models.election, {
+        foreignKey: "electionid",
+      });
+      
     }
+    
     static async getAllQuestions(id) {
       return await question.findAll({
         where: {
@@ -20,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
       });
     }
 
-    static async newQuestion(data) {
+    static async newQuestion(data){
       try {
         return await this.create({
           queName: data.name,
@@ -31,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
-  }
+  }  
   question.init({
     queid: DataTypes.INTEGER,
     quedes: DataTypes.TEXT,
