@@ -10,13 +10,30 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+      
     }
+  
+  static async getAllVoters(id) {
+    return await voter.findAll({
+      where: {
+        electionid: id,
+      },
+    });
   }
+  static async newVoter({voterid,password,electionid}){
+    return await voter.create({
+      voterid,
+      password,
+      electionid,
+      voterstatus:false,
+    })
+  }
+}
   voter.init({
     voterid: DataTypes.STRING,
     voterstatus: DataTypes.BOOLEAN,
-    password: DataTypes.STRING
+    password: DataTypes.STRING,
+    electionid:DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'voter',

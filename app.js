@@ -153,8 +153,6 @@ app.get(
       try {
         const electionList = await election.getElection();
         if (request.accepts("html")) {
-          // console.log({ electionList });
-          // response.json(electionList);
           response.render("elections", {
             title: "Elections",
             data: electionList,
@@ -214,6 +212,7 @@ app.get(
         console.log(error);
       }
     })
+    
     app.get(
       "/elections/:id/questions",
             async (request, response) => {
@@ -274,14 +273,14 @@ app.get(
       async (request, response) => {
         try {
           const currentQuestion = await question.findByPk(request.params.qid);
-          const currentElection = await currentQuestion.getElection();
+          const currentElection = await election.findByPk(request.params.id);
 
           const options = await option.getoptions(currentQuestion.id);
           const optionCount = await options.length
           response.render("manageQuestion", {
-            title: "Manage your Question",
+            title: "Manage your Questions",
             currentQuestion,
-            options: options,
+            options,
             optionCount,
             currentElection,
             csrfToken: request.csrfToken(),
@@ -294,7 +293,7 @@ app.get(
     app.get(
       "/elections/:id/options",
       async (request, response) => {
-        const options = await Voter.getoptions(request.params.id);
+        const options = await question.getoptions(request.params.id);
         const questions = await question.findByPk(request.params.id);
         response.render("options", {
           questions,
@@ -310,9 +309,8 @@ app.post(
     try {
       const questions = await question.findByPk(request.params.qid);
       const newOptions = await option.addoption({
-        optionname: request.body.optionname,
-        count: 0,
-        questionId: request.params.questionId,
+        optName: request.body.optName,
+        questionId: request.params.qid,
       });
       if (request.accepts("html")) {
         response.redirect(`/elections/${request.params.id}/questions/${request.params.qid}`);
@@ -342,8 +340,98 @@ app.put(
     }
   }
 );
+app.get(
+  "/elections/:id/voters",
+        async (request, response) => {
+    const voters = await voter.getAllVoters(request.params.id);
+    const currentElection = await election.findByPk(request.params.id);
+    console.log(voters);
+    response.render("voters", {
+      title: "registeredVoters",
+      currentElection,
+      voters,
+      id: request.params.id,
+      csrfToken: request.csrfToken(),
+    });
+  }
+);
+app.post(
+  "/elections/:id/voters/new",
+  async (request, response) => {
+    try {
+      const hashedPwd = await bcrypt.hash(request.body.password,saltRounds)
+      const voters = await voter.newVoter({
+        voterid: request.body.voterid,
+        password:hashedPwd,
+        electionid:request.params.id,
 
+      });
+      console.log(voters);
+      if (request.accepts("html")) {
+        response.redirect(
+          `/elections/${request.params.id}/voters`
+        );
+      } else {
+        response.json(voters);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
+app.delete("/elections/:id/questions/:questionid/options/:optionid",async (request, response) => {
+  const deletedResponse=await option.remove(request.params.optionid)
+  response.json(deletedResponse)  
+})
+app.delete("/elections/:id/questions/:questionid",async (request, response) => {
+  const deletedResponse=await question.remove(request.params.questionid)
+  response.json(deletedResponse)  
+})
 
-    
-  
+app.get("/elections/:id/preview",async (request,response)=>{
+  const currentElection= await election.findByPk(request.params.id)
+  const questions = await question.getAllQuestions(currentElection.id)
+  for (let i=0;i<questions.length;i++){
+    questions[i].options= await option.getoptions(questions[i].id)
+  }
+  response.render("preview",{
+    currentElection,
+    data:questions,
+  })
+})
+
+app.get("/elections/:id/launch", async (request,response)=>{
+  await election.launch(request.params.id)
+  response.redirect(`/elections/${request.params.id}`)
+})
+app.put("/elections/:id/end", async (request,response)=>{
+  const endedElection = await election.end(request.params.id)
+  response.json(endedElection)
+})
+
+app.get("/elections/:id/polling",async (request,response)=>{
+  const currentElection= await election.findByPk(request.params.id)
+  const questions = await question.getAllQuestions(currentElection.id)
+  for (let i=0;i<questions.length;i++){
+    questions[i].options= await option.getoptions(questions[i].id)
+  }
+  response.render("pollingPage",{
+    currentElection,
+    data:questions,
+    csrfToken:request.csrfToken()
+  })
+})
+
+app.post("/elections/:id/registerVote",async (request,response)=>{
+  delete request.body["_csrf"]
+  console.log(request.body.length);
+  for(let i in request.body){
+  console.log(request.body[i])
+  var optionn =await option.findByPk(request.body[i])
+  console.log(optionn)
+    await optionn.increment("optCount")
+  }
+  response.send("Vote Registered")
+})
+
 module.exports = app;

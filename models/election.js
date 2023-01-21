@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: "CASCADE",
         foreignKey: "electionid",
       });
+      election.hasMany(models.voter, {
+        onDelete: "CASCADE",
+        foreignKey: "electionid",
+      });
     }
     static getElection(){
       return election.findAll()
@@ -43,6 +47,20 @@ module.exports = (sequelize, DataTypes) => {
     static async checkStatus(id) {
       const election = await election.findByPk(id);
       return election.onGoingStatus;
+    }
+    static async launch(id){
+      return election.update({electionstatus:true},{
+        where:{
+          id
+        }
+      })
+    }
+    static async end(id){
+      return election.update({electionstatus:false},{
+        where:{
+          id
+        }
+      })
     }
   
   }

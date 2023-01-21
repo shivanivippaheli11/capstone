@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h3><%= currentElection.electionname %> </h3>
+    <div>
+        <form action="/elections/<%= currentElection.id %>/registerVote" method="post">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% for( let i = 0; i < data.length; i++ ) { %>
+        <section>
+            <h3>
+                <%= data[i].queName %> 
+            </h3>
+            <ul>
+                <% for( let j = 0; j < data[i].options.length; j++ ) { %>
+                <li>
+                    <input type="radio" name="<%= data[i].id %>" value="<%= data[i].options[j].id %>">
+                    <%= data[i].options[j].optName %> 
+                </li>        
+                <% } %>
+            </ul>
+        </section>
+        <% } %>
+        <button type="submit">Vote</button>
+    </form>
+    </div>
+</body>
+</html>

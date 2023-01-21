@@ -31,11 +31,11 @@ module.exports = (sequelize, DataTypes) => {
         }
       );
     }
-    static async addoption(data) {
+    static async addoption({optName,questionId}) {
       try {
         return await this.create({
-          optionname:data.optionname,
-          questionId: data.questionId,
+          optName,
+          questionId
         });
       } catch (error) {
         console.log(error);
@@ -56,11 +56,13 @@ module.exports = (sequelize, DataTypes) => {
         },
       });
   }
+  
 }
    
   option.init({
     optId: DataTypes.INTEGER,
-    optName: DataTypes.STRING
+    optName: DataTypes.STRING,
+    optCount:DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'option',

@@ -13,21 +13,6 @@
         var token = document
             .querySelector('meta[name="csrf-token"]')
             .getAttribute("content")
-        // function startElection(id){
-        //     fetch(`/elections/${id}/start`, {
-        //         method: "put",
-        //         headers: { "Content-Type": "application/json" },
-        //         body: JSON.stringify({
-        //             "_csrf": token
-        //         })
-        //     })
-        //         .then((res) => {
-        //             if (res.ok) {
-        //                 window.location.reload();
-        //             }
-        //         })
-        //         .catch((err) => console.log(err));
-        // }
         function endElection(id){
             fetch(`/elections/${id}/end`, {
                 method: "put",
@@ -38,26 +23,12 @@
             })
                 .then((res) => {
                     if (res.ok) {
-                        window.location.replace(`/elections/${id}/results`);
+                        window.location.reload()
                     }
                 })
                 .catch((err) => console.log(err));
         }
-        function deleteElection(id){
-            fetch(`/elections/${id}`, {
-                method: "delete",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    "_csrf": token
-                })
-            })
-                .then((res) => {
-                    if (res.ok) {
-                        window.location.replace("/elections");
-                    }
-                })
-                .catch((err) => console.log(err));
-        }
+        
     </script>
 </head>
 <body>
@@ -73,13 +44,13 @@
         <a href="/elections/<%=id%>/questions">Manage your questions</a>
     <%}else{%>
         <b>Election running at:</b>
-        <a id="vote" href="/elections/<%=id%>/vote" >/elections/<%=id%>/vote</a>
+        <a id="vote" href="/elections/<%=id%>/polling" >/elections/<%=id%>/vote</a>
         <%}%>
     <h3>Number of registered Voters for this election:<span><%=voterCount%></span> </h3>
     <a href="/elections/<%=id%>/voters">Manage voters</a>
     <div>
         <%if(!onGoingStatus){%>
-            <a href="/elections/<%=id%>/electionPreview"><button>Preview Election</button></a>
+            <a href="/elections/<%=id%>/preview"><button>Preview Election</button></a>
             
             <%}else{%>
                 <button onclick="endElection(<%=id%>)">End Election</button>
@@ -93,6 +64,12 @@
     <script>
         const vote=document.getElementById("vote")
         vote.innerText=window.location.origin+vote.innerText
-    </script>
+        
+        var token=document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content");
+        
+        
+      </script>
 </body>
 </html>

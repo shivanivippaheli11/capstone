@@ -35,6 +35,13 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
+    static async remove(id) {
+      return this.destroy({
+        where: {
+          id,
+        },
+      });
+    }
   }  
   question.init({
     queid: DataTypes.INTEGER,

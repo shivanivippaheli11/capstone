@@ -29,20 +29,40 @@
       <li>
         <div>
           <u id="<%=options[i].id%>">
-            <%= options[i].name %></u>
-            <button onclick="deleteOption(<%=currentElection.id%>,<%=currentQuestion.id%>,<%=options[i].id%>)">del</button>
+            <%= options[i].optName %></u>
+            <button onclick="removeOption(<%=currentElection.id%>,<%=currentQuestion.id%>,<%=options[i].id%>)">remove</button>
           </div>
         </li>
         <% } %>
         </div>
 
     </ul>
-
+  
     <form action="/elections/<%=currentElection.id%>/questions/<%=currentQuestion.id%>/options/new" method="post">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <input type="text" placeholder="Add new option" name="name" autofocus/>
+      <input type="text" placeholder="Add new option" name="optName" autofocus/>
       <button type="submit">Add</button>
     </form>
-    <button onclick="deleteQuestion(<%= currentElection.id%>,<%= currentQuestion.id%>)">Delete Question</button>
+    <script>
+      var token=document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute("content");
+      function removeOption(Electionid,Questionid,optionid){
+            fetch(`/elections/${Electionid}/questions/${Questionid}/options/${optionid}`,{
+                method:"delete",
+                headers:{"Content-Type": "application/json"},
+                body:JSON.stringify({
+                    "_csrf":token
+            })
+            })
+              .then((res)=>{
+                if(res.ok){
+                    window.location.reload();
+                }
+              })
+              .catch((err) => console.error(err));
+        }
+      
+    </script>
   </body>
 </html>

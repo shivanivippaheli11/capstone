@@ -5,6 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%=title%></title>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+
   </head>
   <body>
     <%- include('header.ejs') %>
@@ -21,6 +23,10 @@
                             <%= allQuestions[i].queName %>
                         </a>
                         
+                        
+                    </td>
+                    <td>
+                        <button onclick="removeQuestion(<%= currentElection.id%>,<%=allQuestions[i].id%>)">Remove</button>
                     </td>
                 </tr>
                 <% } %>
@@ -56,6 +62,26 @@
         </tr>
         </table>
     </form>
-    
+    <script>
+       var token=document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute("content");
+      function removeQuestion(Electionid,Questionid){
+            fetch(`/elections/${Electionid}/questions/${Questionid}`,{
+                method:"delete",
+                headers:{"Content-Type": "application/json"},
+                body:JSON.stringify({
+                    "_csrf":token
+            })
+            })
+              .then((res)=>{
+                if(res.ok){
+                    window.location.reload();
+                }
+              })
+              .catch((err) => console.error(err));
+        }
+       
+    </script>
   </body>
 </html>
