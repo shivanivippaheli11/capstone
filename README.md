@@ -8,3 +8,11 @@ Express is a node java script web application framework which has broad features
 - Admin has all controls on managing elections and voters
 
 - Voters can view and vote on candidates
+# URL
+https://my-voting-app-6wx3.onrender.com/
+# Author
+Shivani vippaheli
+# Constructed by
+- Express.js
+- Sequelize
+- EJS
