@@ -47,8 +47,9 @@
       var token=document
         .querySelector('meta[name="csrf-token"]')
         .getAttribute("content");
-      function removeOption(Electionid,Questionid,optionid){
-            fetch(`/elections/${Electionid}/questions/${Questionid}/options/${optionid}`,{
+      
+        function removeQuestion(electionid,questionid){
+            fetch(`/elections/${electionid}/questions/${questionid}`,{
                 method:"delete",
                 headers:{"Content-Type": "application/json"},
                 body:JSON.stringify({
@@ -56,33 +57,38 @@
             })
             })
               .then((res)=>{
-                if(res.ok){
+                if(res.status===200){
                     window.location.reload();
+                }else {
+                  window.alert("cannot delete last question")
+                  window.location.reload();
+
                 }
               })
               .catch((err) => console.error(err));
         }
-        function deleteQuestion(id,questionid){
-        fetch(`/elections/${id}/questions/${questionid}`, {
-                method: "delete",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    "_csrf": token
-                })
+        
+        function removeOption(electionid,questionid,optionid){
+            fetch(`/elections/${electionid}/questions/${questionid}/options/${optionid}`,{
+                method:"delete",
+                headers:{"Content-Type": "application/json"},
+                body:JSON.stringify({
+                    "_csrf":token
             })
-                .then((res) => {
-                    console.log(res)
-                    if (res.status===200) {
-                        window.location.replace(`/elections/${id}/questions`);
-                    }else if(res.status===300){
-                      window.alert("There should be atleast two questions in the ballet to function remove")
-                      window.location.reload()
-                    }
-          })
-                
-                .catch((err) => console.log(err));
-      }
+            })
+              .then((res)=>{
+                if(res.status===200){
+                    window.location.reload();
+                }else {
+                  window.alert("cannot delete last two options")
+                  window.location.reload();
 
+                }
+              })
+              .catch((err) => console.error(err));
+        }
+        
+          
       
     </script>
   </body>

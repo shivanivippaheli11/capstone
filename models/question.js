@@ -35,12 +35,12 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
-    static async removeQuestion(id) {
+    static async remove(id) {
       return this.destroy({
         where: {
           id,
         },
-        cascade:true,
+        
       });
     }
   }  

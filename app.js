@@ -37,7 +37,27 @@ app.use(function (request, response, next) {
 });
 app.use(passport.initialize());
 app.use(passport.session());
-passport.use(
+function isVoterLoggedIn(){
+  return function(request,response,next){
+    if(request.user && request.user.voterid){
+      next()
+    }else{
+      response.redirect(`/elections/${request.params.id}/voterlogin`)
+    }
+  }
+}
+function isAdminLoggedIn(){
+  return function(request,response,next){
+    console.log(request.user);
+    if(request.user && request.user.email){
+      next()
+    }else{
+      response.redirect(`/login`)
+    }
+  }
+}
+
+passport.use("admin-local",
   new localStrategy(
     {
       usernameField: "email",
@@ -60,32 +80,95 @@ passport.use(
     }
   )
 );
+passport.use("voter-local",
+  new localStrategy(
+    {
+      usernameField: "voterid",
+      passwordField: "password",
+      passReqToCallback:true
+    },
+    (request,username, password, done) => {
+      voter.findOne({ where: { voterid: username,electionid:request.params.id } })
+        .then(async function (user) {
+          const result = await bcrypt.compare(password, user.password);
+          if (result) {
+            return done(null, user);
+          } else {
+            return done(null, false, { message: "Invalid password" });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          return done(null, false, { message: "Invalid email" });
+        });
+    }
+  )
+);
 passport.serializeUser((user, done) => {
   console.log("Serializing user in session", user.id);
-  done(null, user.id);
+  let isVoter
+  if(user.voterid){
+    isVoter=true
+  }else if(user.firstName){
+    isVoter = false
+  }
+  done(null, {_id:user.id,isVoter});
 });
-passport.deserializeUser((id, done) => {
-  admin.findByPk(id)
+passport.deserializeUser((user, done) => {
+  if(user.isVoter){
+    voter.findByPk(user._id)
+      .then((user)=>{
+        done(null,user);
+      })
+      .catch((err)=>{
+        done(err,null)
+      })
+  }else{
+  admin.findByPk(user._id)
     .then((user) => {
       done(null, user);
     })
     .catch((error) => {
       done(error, null);
     });
+  }
 });
-function electionIsNotRunning() {
+function canAccessQuestions() {
   return async function (req, res, next) {
     const elections = await election.findByPk(req.params.id);
-    if (elections.onGoingStatus === false) {
+    if (elections.electionstatus === false) {
       next();
     } else {
-      req.flash("error", "Election is running and cannot modify questions or answers");
+      req.flash("error", "Election is running so we cannot modify any questions");
       res.redirect(`/elections/${req.params.id}`);
     }
   };
 }
+function areAdmins() {
+  return function (req, res, next) {
+    if (req.user.areAdmins === true) {
+      next();
+    } else {
+      req.flash("error",'login as an "Admin"')
+      res.redirect("/login");
+    }
+  };
+}
 
-app.get("/signup", (request, response) => {
+function areVoters() {
+  return function (req, res, next) {
+    console.log("in areVoters function", req.user.id);
+    if (req.user.areAdmins === false) {
+      next();
+    } else {
+      req.flash("error", "Login as a voter to vote for elections");
+      res.redirect(`/elections/${req.params.id}/voterlogin`);
+    }
+  };
+}
+
+
+app.get("/signup",(request, response) => {
     response.render("signup", {
       title: "Signup",
       csrfToken: request.csrfToken(),
@@ -96,8 +179,8 @@ app.get("/signup", (request, response) => {
   
     try {
       const user = await admin.create({
-        firstName: request.body.firstName,
-        lastName: request.body.lastName,
+        fname: request.body.firstName,
+        lname: request.body.lastName,
         email: request.body.email,
         password: hashedPwd,
       });
@@ -120,7 +203,7 @@ app.get("/signup", (request, response) => {
   app.use(express.static(path.join(__dirname, "public")));
   app.post(
     "/session",
-    passport.authenticate("local", {
+    passport.authenticate("admin-local", {
       failureRedirect: "/login",
       failureFlash: true,
     }),
@@ -129,7 +212,7 @@ app.get("/signup", (request, response) => {
     }
   );
 
-  app.get("/login", (request, response) => {
+  app.get("/login",(request, response) => {
     if (request.user && request.user.isAdmin) {
       response.redirect("/elections");
     } else {
@@ -183,7 +266,7 @@ app.get(
 
 
   app.get(
-    "/elections/:id",
+    "/elections/:id",isAdminLoggedIn(),
     async (request, response) => {
       try {
         const { electionname, electionstatus } = await election.findByPk(
@@ -216,6 +299,7 @@ app.get(
     
     app.get(
       "/elections/:id/questions",
+      canAccessQuestions(),
             async (request, response) => {
         const allQuestions = await question.getAllQuestions(request.params.id);
         console.log(allQuestions);
@@ -232,6 +316,7 @@ app.get(
   
     app.post(
       "/elections/:id/questions/new",
+      canAccessQuestions(),
       async (request, response) => {
         try {
           const questions = await question.newQuestion({
@@ -254,7 +339,9 @@ app.get(
     );
 
     
-    app.put("/elections/:id/questions/:qid", async (request, response) => {
+    app.put("/elections/:id/questions/:qid",
+    canAccessQuestions(),
+    async (request, response) => {
       try {
         const addedQuestion = await question.updateData(
           request.params.questionId,
@@ -271,6 +358,7 @@ app.get(
     });
     app.get(
       "/elections/:id/questions/:qid",
+      canAccessQuestions(),
       async (request, response) => {
         try {
           const currentQuestion = await question.findByPk(request.params.qid);
@@ -293,6 +381,7 @@ app.get(
     );
     app.get(
       "/elections/:id/options",
+      canAccessQuestions(),
       async (request, response) => {
         const options = await question.getoptions(request.params.id);
         const questions = await question.findByPk(request.params.id);
@@ -306,6 +395,7 @@ app.get(
     
 app.post(
   "/elections/:id/questions/:qid/options/new",
+  canAccessQuestions(),
   async (request, response) => {
     try {
       const questions = await question.findByPk(request.params.qid);
@@ -324,6 +414,7 @@ app.post(
 );
 app.put(
   "/elections/:id/questions/:qid/options/:oid",
+  canAccessQuestions(),
   async (request, response) => {
     try {
       const addedOption = await option.update(
@@ -380,7 +471,7 @@ app.post(
     }
   }
 );
-app.delete("/elections/:id",async(request,response)=>{
+app.delete("/elections/:id",isAdminLoggedIn(),async(request,response)=>{
   try{
   const electionscount=await election.removeElection(request.params.id);
   response.json(electionscount>0?true:false);
@@ -389,19 +480,24 @@ app.delete("/elections/:id",async(request,response)=>{
 }
 }
 );
-app.delete("/elections/:id/questions/:questionid/options/:optionid",async (request, response) => {
+app.delete("/elections/:id/questions/:questionid/options/:optionid",
+canAccessQuestions(),
+async (request, response) => {
   const deletedResponse=await option.remove(request.params.optionid)
   response.json(deletedResponse)  
 })
-app.delete("/elections/:id/questions/:questionid",async (request, response) => {
+app.delete("/elections/:id/questions/:questionid",
+canAccessQuestions(),
+async (request, response) => {
   try{
-    const electionQuestions=await question.getAllQuestions(request.params.qid);
+    const electionQuestions=await question.getAllQuestions(request.params.id);
      if(electionQuestions.length<2){
+
         console.log("Questions cannot be deleted if the questions length is less than 2")
-        response.json(0)
+        response.status(300).json(0);
      }  else{
-  const deletedResponse=await question.removeQuestion(request.params.questionid)
-  response.json(deletedResponse)  }
+  const deletedResponse=await question.remove(request.params.questionid)
+  response.status(200).json(deletedResponse)  }
 }catch(err){
   console.log(err);
 }
@@ -420,7 +516,25 @@ app.get("/elections/:id/preview",async (request,response)=>{
 })
 
 app.get("/elections/:id/launch", async (request,response)=>{
-  await election.launch(request.params.id)
+  let allQuestions2Options = true
+  const electionn= await election.findByPk(request.params.id)
+  const questions = await question.getAllQuestions(request.params.id)
+  for(let i=0;i<questions.length;i++){
+    var opts = await option.getoptions(questions[i].id)
+    if (opts.length<2){
+      allQuestions2Options =  false      
+    }
+  }
+  if(allQuestions2Options){  
+    await election.update({electionstatus:true},{
+      where:{
+        id:request.params.id
+      }
+    })
+  }else{
+    request.flash("error","All questions dont have atleast of 2 options")
+
+  }
   response.redirect(`/elections/${request.params.id}`)
 })
 app.put("/elections/:id/end", async (request,response)=>{
@@ -428,7 +542,9 @@ app.put("/elections/:id/end", async (request,response)=>{
   response.json(endedElection)
 })
 
-app.get("/elections/:id/polling",async (request,response)=>{
+app.get("/elections/:id/polling",
+isVoterLoggedIn()
+,async (request,response)=>{
   const currentElection= await election.findByPk(request.params.id)
   const questions = await question.getAllQuestions(currentElection.id)
   for (let i=0;i<questions.length;i++){
@@ -441,7 +557,9 @@ app.get("/elections/:id/polling",async (request,response)=>{
   })
 })
 
-app.post("/elections/:id/registerVote",async (request,response)=>{
+app.post("/elections/:id/registerVote",
+isVoterLoggedIn(),
+async (request,response)=>{
   delete request.body["_csrf"]
   console.log(request.body.length);
   for(let i in request.body){
@@ -452,5 +570,36 @@ app.post("/elections/:id/registerVote",async (request,response)=>{
   }
   response.send("Vote Registered")
 })
+
+app.get("/elections/:id/voterlogin",(request,response)=>{
+  response.render("voterlogin",{csrfToken:request.csrfToken(),title:"voterslogin",id:request.params.id})
+})
+
+app.post(
+  "/elections/:id/voterlogin",isVoterLoggedIn(),
+  passport.authenticate("voter-local", {
+    failureRedirect: "back",
+    failureFlash: true,
+  }),
+  (request, response) => {
+    response.redirect(`/elections/${request.params.id}/polling`);
+  }
+);
+
+app.get("/elections/:id/results",async (request,response)=>{
+  const currentElection= await election.findByPk(request.params.id)
+  const questions = await question.getAllQuestions(currentElection.id)
+  for (let i=0;i<questions.length;i++){
+    questions[i].options= await option.getoptions(questions[i].id)
+  }
+  response.render("results",{
+    currentElection,
+    data:questions,
+    csrfToken:request.csrfToken()
+  })
+})
+
+
+
 
 module.exports = app;

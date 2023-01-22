@@ -63,6 +63,33 @@
         </table>
     </form>
     <script>
-    </script>
+        var token=document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute("content");
+        
+          function removeQuestion(electionid,questionid){
+              fetch(`/elections/${electionid}/questions/${questionid}`,{
+                  method:"delete",
+                  headers:{"Content-Type": "application/json"},
+                  body:JSON.stringify({
+                      "_csrf":token
+              })
+              })
+                .then((res)=>{
+                    if(res.status===200){
+                    window.location.reload();
+                }else {
+                  window.alert("cannot delete last question")
+                  window.location.reload();
+
+                }
+                })
+                .catch((err) => console.error(err));
+          }
+          
+          
+            
+        
+      </script>
   </body>
 </html>
