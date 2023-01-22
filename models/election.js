@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
-    static async deleteElection(id) {
+    static async removeElection(id) {
       return await this.destroy({
         where: {
           id,

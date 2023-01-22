@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     static async getAllQuestions(id) {
       return await question.findAll({
         where: {
-          electionid: id,
+          electionid:id,
         },
       });
     }
@@ -35,11 +35,12 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
-    static async remove(id) {
+    static async removeQuestion(id) {
       return this.destroy({
         where: {
           id,
         },
+        cascade:true,
       });
     }
   }  

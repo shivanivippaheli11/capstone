@@ -19,6 +19,7 @@ app.set("view engine", "ejs");
 app.use(flash());
 app.use(csrf({ cookie: true }))
 const { op } = require("sequelize");
+const { isArrayBufferView } = require("util/types");
 
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
@@ -379,13 +380,31 @@ app.post(
     }
   }
 );
+app.delete("/elections/:id",async(request,response)=>{
+  try{
+  const electionscount=await election.removeElection(request.params.id);
+  response.json(electionscount>0?true:false);
+}catch(error){
+  console.log(error);
+}
+}
+);
 app.delete("/elections/:id/questions/:questionid/options/:optionid",async (request, response) => {
   const deletedResponse=await option.remove(request.params.optionid)
   response.json(deletedResponse)  
 })
 app.delete("/elections/:id/questions/:questionid",async (request, response) => {
-  const deletedResponse=await question.remove(request.params.questionid)
-  response.json(deletedResponse)  
+  try{
+    const electionQuestions=await question.getAllQuestions(request.params.qid);
+     if(electionQuestions.length<2){
+        console.log("Questions cannot be deleted if the questions length is less than 2")
+        response.json(0)
+     }  else{
+  const deletedResponse=await question.removeQuestion(request.params.questionid)
+  response.json(deletedResponse)  }
+}catch(err){
+  console.log(err);
+}
 })
 
 app.get("/elections/:id/preview",async (request,response)=>{

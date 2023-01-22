@@ -49,15 +49,34 @@ module.exports = (sequelize, DataTypes) => {
         }
       );
     }
+    static async revaluecount(id){
+      return option.update(
+        {count:0},
+        {
+          where: {
+            questionId: id,
+        },
+      }
+      );
+    }
+      static async addCount(id) {
+        return option.addoption("count", {
+          where: {
+            id,
+          },
+        });
+      }
+    
+  
     static async remove(id) {
       return this.destroy({
         where: {
           id,
         },
       });
-  }
-  
+    }
 }
+
    
   option.init({
     optId: DataTypes.INTEGER,

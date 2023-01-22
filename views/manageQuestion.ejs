@@ -62,6 +62,27 @@
               })
               .catch((err) => console.error(err));
         }
+        function deleteQuestion(id,questionid){
+        fetch(`/elections/${id}/questions/${questionid}`, {
+                method: "delete",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    "_csrf": token
+                })
+            })
+                .then((res) => {
+                    console.log(res)
+                    if (res.status===200) {
+                        window.location.replace(`/elections/${id}/questions`);
+                    }else if(res.status===300){
+                      window.alert("There should be atleast two questions in the ballet to function remove")
+                      window.location.reload()
+                    }
+          })
+                
+                .catch((err) => console.log(err));
+      }
+
       
     </script>
   </body>

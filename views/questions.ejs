@@ -63,25 +63,6 @@
         </table>
     </form>
     <script>
-       var token=document
-        .querySelector('meta[name="csrf-token"]')
-        .getAttribute("content");
-      function removeQuestion(Electionid,Questionid){
-            fetch(`/elections/${Electionid}/questions/${Questionid}`,{
-                method:"delete",
-                headers:{"Content-Type": "application/json"},
-                body:JSON.stringify({
-                    "_csrf":token
-            })
-            })
-              .then((res)=>{
-                if(res.ok){
-                    window.location.reload();
-                }
-              })
-              .catch((err) => console.error(err));
-        }
-       
     </script>
   </body>
 </html>
