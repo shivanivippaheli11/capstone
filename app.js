@@ -20,7 +20,6 @@ app.use(flash());
 app.use(csrf({ cookie: true }))
 const { op } = require("sequelize");
 const { isArrayBufferView } = require("util/types");
-
 app.use(express.static(path.join(__dirname, "public")));
 app.use(
   session({
