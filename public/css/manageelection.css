@@ -1,0 +1,9 @@
+button{
+    font-size: 18px;
+    width: 100px;
+    height: 42px;
+}
+button:hover{
+    opacity: 1;
+    background-color:rgb(100, 164, 237);
+}

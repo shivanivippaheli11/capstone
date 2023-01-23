@@ -42,6 +42,7 @@ function isVoterLoggedIn(){
     if(request.user && request.user.voterid){
       next()
     }else{
+      console.log("rrrrrrrrrrrrrrrrrrr");
       response.redirect(`/elections/${request.params.id}/voterlogin`)
     }
   }
@@ -106,7 +107,7 @@ passport.use("voter-local",
 );
 passport.serializeUser((user, done) => {
   console.log("Serializing user in session", user.id);
-  let isVoter
+  let isVoter;
   if(user.voterid){
     isVoter=true
   }else if(user.firstName){
@@ -133,40 +134,46 @@ passport.deserializeUser((user, done) => {
     });
   }
 });
+function isElectionRunning() {
+  return async function (req, res, next) {
+    const elections = await election.findByPk(req.params.id);
+    if (elections.electionstatus === true) {
+      next();
+    } else {
+      res.redirect(`/elections/${req.params.id}/results`);
+    }
+  };
+}
 function canAccessQuestions() {
   return async function (req, res, next) {
     const elections = await election.findByPk(req.params.id);
     if (elections.electionstatus === false) {
       next();
     } else {
-      req.flash("error", "Election is running so we cannot modify any questions");
       res.redirect(`/elections/${req.params.id}`);
     }
   };
 }
-function areAdmins() {
-  return function (req, res, next) {
-    if (req.user.areAdmins === true) {
-      next();
-    } else {
-      req.flash("error",'login as an "Admin"')
-      res.redirect("/login");
-    }
-  };
-}
 
-function areVoters() {
+
+function isVoter() {
   return function (req, res, next) {
-    console.log("in areVoters function", req.user.id);
-    if (req.user.areAdmins === false) {
+    console.log("is in a voter list", req.user.id);
+    if (req.user.isAdmin === false) {
       next();
     } else {
-      req.flash("error", "Login as a voter to vote for elections");
       res.redirect(`/elections/${req.params.id}/voterlogin`);
     }
   };
 }
-
+function isEligible() {
+  return function (req, res, next) {
+    if (req.user.voterstatus === false) {
+      next();
+    } else {
+      res.redirect(`/elections/${req.params.id}/voterlogin`);
+    }
+}};
 
 app.get("/signup",(request, response) => {
     response.render("signup", {
@@ -543,8 +550,10 @@ app.put("/elections/:id/end", async (request,response)=>{
 })
 
 app.get("/elections/:id/polling",
-isVoterLoggedIn()
-,async (request,response)=>{
+isElectionRunning(),
+isVoterLoggedIn(),
+isEligible(),
+async (request,response)=>{
   const currentElection= await election.findByPk(request.params.id)
   const questions = await question.getAllQuestions(currentElection.id)
   for (let i=0;i<questions.length;i++){
@@ -558,7 +567,9 @@ isVoterLoggedIn()
 })
 
 app.post("/elections/:id/registerVote",
+isElectionRunning(),
 isVoterLoggedIn(),
+isEligible(),
 async (request,response)=>{
   delete request.body["_csrf"]
   console.log(request.body.length);
@@ -568,7 +579,9 @@ async (request,response)=>{
   console.log(optionn)
     await optionn.increment("optCount")
   }
-  response.send("Vote Registered")
+  console.log();
+  await voter.update({voterstatus:true},{where:{id:request.user.id}})
+  response.redirect(`/elections/${request.params.id}/thankyou`)
 })
 
 app.get("/elections/:id/voterlogin",(request,response)=>{
@@ -576,7 +589,7 @@ app.get("/elections/:id/voterlogin",(request,response)=>{
 })
 
 app.post(
-  "/elections/:id/voterlogin",isVoterLoggedIn(),
+  "/elections/:id/voterlogin",
   passport.authenticate("voter-local", {
     failureRedirect: "back",
     failureFlash: true,
@@ -598,7 +611,35 @@ app.get("/elections/:id/results",async (request,response)=>{
     csrfToken:request.csrfToken()
   })
 })
-
+app.get(
+  "/elections/:id/thankyou",
+  (request, response) => {
+    response.render("thankyou", { title: "Thankyou", id: request.params.id });
+  }
+);
+app.get("/changePassword",
+ (request, response) => {
+    response.render("changePassword", { title: "Change Password", csrfToken: request.csrfToken() });
+  }
+  );
+  app.post("/changePassword",
+  async (request,response)=>{
+    const previousPassword =request.user.password;
+    console.log(request.user.password)
+    const results = await bcrypt.compare(request.body.previousPassword,previousPassword);
+    if (results){
+      const hashedNewPassword = await bcrypt.hash(request.body.newPassword,saltRounds)
+      await admin.update({password:hashedNewPassword},{
+        where:{
+          id:request.user.id
+        }
+      })
+      response.redirect(`/signout`)
+    }else{
+      response.redirect(`/changePassword`)
+    }
+  }
+  )
 
 
 

@@ -5,8 +5,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<%= csrfToken %>">
-    <link rel="stylesheet" href="/css/index.css">
+    <link rel="stylesheet" href="./css/manageelection.css">
     <title><%=title%></title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Anton&family=Rubik+Microbe&display=swap" rel="stylesheet">
     <style> @import url('https://fonts.googleapis.com/css2?family=Lora:ital@1&display=swap'); </style>
     <script>
@@ -52,7 +53,6 @@
       </div>
     <%- include('header.ejs') %>
     <a href="/signout"><button>SignOut</button></a>
-
     <h3><a href="/elections/<%=id%>"><%=electionName%></a></h3>
     <% if(messages && messages.error && messages.error.length > 0)  { %>
         <% for(var i=0; i<messages.error.length; i++) { %>
