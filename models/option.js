@@ -21,16 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         console.log(error);
       }
     }
-    static async update(id, name) {
-      return await option.update(
-        { optionname: name },
-        {
-          where: {
-            id,
-          },
-        }
-      );
-    }
+    
     static async addoption({optName,questionId}) {
       try {
         return await this.create({

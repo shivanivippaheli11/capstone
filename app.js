@@ -40,7 +40,7 @@ function isVoterLoggedIn(){
     if(request.user && request.user.voterid){
       next()
     }else{
-      console.log("rrrrrrrrrrrrrrrrrrr");
+      console.log("abc");
       response.redirect(`/elections/${request.params.id}/voterlogin`)
     }
   }
@@ -423,10 +423,10 @@ app.put(
   async (request, response) => {
     try {
       const addedOption = await option.update(
-        { name: request.body.name, count: 0 },
+        { optName: request.body.optionnName, optCount: 0 },
         {
           where: {
-            id: request.params.optionid,
+            id: request.params.oid,
           },
         }
       );

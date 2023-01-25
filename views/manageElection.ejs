@@ -61,13 +61,13 @@
       <% } %>
     <h3>Number of Questions in Ballot:<span><%=quesCount%></span></h3>
     <% if (! onGoingStatus){%>
-        <a href="/elections/<%=id%>/questions">Manage your questions</a>
+        <a href="/elections/<%=id%>/questions"><button>Manage your questions</button></a>
     <%}else{%>
         <b>Election running at:</b>
         <a id="vote" href="/elections/<%=id%>/polling" >/elections/<%=id%>/polling</a>
         <%}%>
     <h3>Number of registered Voters for this election:<span><%=voterCount%></span> </h3>
-    <a href="/elections/<%=id%>/voters">Manage voters</a>
+    <a href="/elections/<%=id%>/voters"><button>Manage voters</button></a><br><br>
     <div>
         <%if(!onGoingStatus){%>
             <a href="/elections/<%=id%>/preview"><button>Preview Election</button></a>

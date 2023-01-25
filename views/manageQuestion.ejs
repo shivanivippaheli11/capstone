@@ -18,26 +18,22 @@
     <a href="/signout"><button>SignOut</button></a>
     
 <div>
-    <b><%=currentQuestion.name%></b>
+    <b><%=currentQuestion.queName%></b>
 </div>
-    <p ><%=currentQuestion.description%></p>
+    <p ><%=currentQuestion.quedes%></p>
     
     
 
     <ul>
       <% for (let i=0; i < options.length;i++){%>
-      <li>
         <div>
-          <u id="<%=options[i].id%>">
-            <%= options[i].optName %></u>
-            
+            <li id="<%=options[i].id%>" class="optionn"><%=options[i].optName%></li>
+            <button id="<%=options[i].id%>btn" onclick="editOption(<%=currentElection.id%>,<%=currentQuestion.id%>,<%=options[i].id%>)">edit</button>
             <button onclick="removeOption(<%=currentElection.id%>,<%=currentQuestion.id%>,<%=options[i].id%>)">remove</button>
-          </div>
-        </li>
         <% } %>
         </div>
 
-    </ul>
+  
   
     <form action="/elections/<%=currentElection.id%>/questions/<%=currentQuestion.id%>/options/new" method="post">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -48,7 +44,7 @@
       var token=document
         .querySelector('meta[name="csrf-token"]')
         .getAttribute("content");
-      
+        
         function removeQuestion(electionid,questionid){
             fetch(`/elections/${electionid}/questions/${questionid}`,{
                 method:"delete",
@@ -89,8 +85,32 @@
               .catch((err) => console.error(err));
         }
         
-          
-      
+      function editOption(electionid,questionid,optionid){
+            var editOptionBtn = document.getElementById(optionid+"btn")
+            
+            const optionn = document.getElementById(optionid)
+            
+            if(editOptionBtn.innerText==="edit"){
+                optionn.contentEditable=true
+                editOptionBtn.innerText="save"
+            }else{
+            fetch(`/elections/${electionid}/questions/${questionid}/options/${optionid}`,{
+               method: "put",
+               headers: {"Content-Type": "application/json" }, 
+               body: JSON.stringify({
+                optionnName:optionn.innerText,
+                "_csrf": token
+               })
+            })
+               .then((res) => {
+                 if (res.ok) {
+                    window.location.reload();
+                 }
+               })
+               .catch((err) => console.error(err));
+            }
+          }
     </script>
+
   </body>
 </html>

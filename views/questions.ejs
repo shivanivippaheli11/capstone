@@ -11,7 +11,6 @@
   <body>
     <%- include('header.ejs') %>
     <a href="/signout"><button>SignOut</button></a>
-    
     <h4><%=currentElection.electionname%>- ballot</h4>
     <div>
 
@@ -86,6 +85,8 @@
                 })
                 .catch((err) => console.error(err));
           }
+          
+        
           
           
             
