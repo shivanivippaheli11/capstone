@@ -153,17 +153,6 @@ function canAccessQuestions() {
   };
 }
 
-
-function isVoter() {
-  return function (req, res, next) {
-    console.log("is in a voter list", req.user.id);
-    if (req.user.isAdmin === false) {
-      next();
-    } else {
-      res.redirect(`/elections/${req.params.id}/voterlogin`);
-    }
-  };
-}
 function isEligible() {
   return function (req, res, next) {
     if (req.user.voterstatus === false) {
